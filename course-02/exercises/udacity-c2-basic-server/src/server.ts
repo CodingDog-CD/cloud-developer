@@ -70,13 +70,83 @@ import { Car, cars as cars_list } from './cars';
 
   // @TODO Add an endpoint to GET a list of cars
   // it should be filterable by make with a query paramater
+  app.get( "/cars/", ( req: Request, res: Response ) => {
+    let { make } = req.query;
+//    let { type } = req.query;
+//    let { model} = req.query;
+//    let { cost } = req.query;
+    let { id } = req.query;
+
+    // function to filter cars with specific make parameter
+    function returnByMake(element:Car){
+        return element.make == `${make}`;
+    }
+    // function to filter car with specific id.
+    function returnById(element:Car){
+      let x:number = +`${id}`;
+      return element.id == x;
+    } 
+
+    if ( !make && !id) {
+      return res.status(200)
+                .json(cars);
+    }
+    else if (make && id){
+      let carcus:Car[] = cars.filter(returnByMake).filter(returnById);
+      return res.status(200)
+      .send(carcus);
+    }
+    else if (!make && id){
+      let carcus:Car[] = cars.filter((car) => car.id === +id);
+      return res.status(200)
+      .send(carcus);
+    }
+    else if (make&&!id){
+      let carcus:Car[] = cars.filter(returnByMake);
+      return res.status(200)
+      .send(carcus);
+    }
+    }
+   );
+
 
   // @TODO Add an endpoint to get a specific car
   // it should require id
   // it should fail gracefully if no matching car is found
+  app.get("/cars/:id", (req:Request , res:Response) =>{
+    let {id} = req.params;
+    if(!id){
+      return res.status(400).send("need an id!");
+    }
+    // a function to filter the car with specific Id
+    function returnById(element:Car){
+      let reqId:number = +id;
+      return element.id == reqId;
+    }
+    // use the filter to the array of object cars
+    let specCar:Car[] = cars.filter(returnById);
+    if(Object.keys(specCar).length == 0){
+      return res.status(400).send(`Car with the Id: ${id} is not found!`);
+    } else{
+      return res.status(200).json(specCar);
+    }
+  });
+
 
   /// @TODO Add an endpoint to post a new car to our list
   // it should require id, type, model, and cost
+  app.post("/cars",
+  async (req: Request, res: Response) => {
+    const{ make, id, type, model, cost} = req.body;
+
+    if (!id || !type || !model || !cost){
+      return res.status(400).send(`Not valid`);
+    }
+    let newcar:Car = {make:make, type:type, model:model, cost: cost, id:id};
+    cars.push(newcar);
+    return res.status(200).send(newcar);
+  });
+
 
   // Start the Server
   app.listen( port, () => {
