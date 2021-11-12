@@ -18,13 +18,29 @@ router.get('/', async (req: Request, res: Response) => {
 
 //@TODO
 //Add an endpoint to GET a specific resource by Primary Key
+router.get('/:id', async (req:Request, res:Response) => {
+    const {id} = req.params;
+    const item = await FeedItem.findByPk(id);
+
+    res.send(item);
+})
 
 // update a specific resource
 router.patch('/:id', 
     requireAuth, 
     async (req: Request, res: Response) => {
-        //@TODO try it yourself
-        res.send(500).send("not implemented")
+        const {id} = req.params;
+        var newItem = await FeedItem.findByPk(id);  // take the item with the given id
+
+        // check if it is valid
+        if (newItem === null) {res.send(500).send("not implemented");}
+        const newUrl = req.body.url;  // get the request body
+        if (!newUrl) {res.status(400).send({message: `File url is required`});}
+        newItem.url = newUrl;         // assign the new url to the object
+        await newItem.save();               // save the object with new url in database
+        newItem.url = AWS.getGetSignedUrl(newUrl);
+        res.status(201).send(newItem);
+        
 });
 
 
